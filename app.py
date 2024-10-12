@@ -8,9 +8,6 @@ from tensorflow.keras.preprocessing import image
 app = Flask(__name__)
 
 
-# Load your pre-trained model
-model = load_model('banana_leaf.h5')
-
 # Specify the folder to save uploaded files
 UPLOAD_FOLDER = 'uploads'
 app.config['UPLOAD_FOLDER'] = UPLOAD_FOLDER
@@ -43,13 +40,16 @@ def predict():
         file.save(filepath)
 
         # Preprocess the image for the model
-        img = image.load_img(filepath, target_size=(224, 224))  # Adjust target size based on your model
+        img = image.load_img(filepath, target_size=(299, 299))  # Adjust target size based on your model
         img_array = image.img_to_array(img)
         img_array = np.expand_dims(img_array, axis=0)
+        
+        # Load your pre-trained model
+        model = load_model('banana_leaf.h5')
 
         # Run the model
         prediction = model.predict(img_array)
-        predicted_class_index = np.argmax(predictions, axis=1)[0]
+        predicted_class_index = np.argmax(prediction, axis=1)[0]
         predicted_class_label = class_labels[predicted_class_index]
         
         return f'Predicted class: {predicted_class_label}'
