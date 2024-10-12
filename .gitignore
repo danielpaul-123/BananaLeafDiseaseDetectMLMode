@@ -3,4 +3,4 @@ banana_leaf.keras
 test-00000-of-00001.parquet
 train-00000-of-00001.parquet
 uploads/
-test_images
+test_images/
