@@ -7,15 +7,6 @@ from tensorflow.keras.preprocessing import image
 
 app = Flask(__name__)
 
-
-# Specify the folder to save uploaded files
-UPLOAD_FOLDER = 'uploads'
-app.config['UPLOAD_FOLDER'] = UPLOAD_FOLDER
-
-# Ensure the upload folder exists
-if not os.path.exists(UPLOAD_FOLDER):
-    os.makedirs(UPLOAD_FOLDER)
-
 # Define the class labels for your model's predictions
 class_labels = ['Healthy', 'Banana Black Sigatoka Disease', 'Banana Bract Mosaic Virus Disease', 'Banana Insect Pest Disease','Banana Moko Disease','Banana Panama Disease','Banana Yellow Sigatoka Disease']  # Update with your actual class names
 
@@ -36,14 +27,14 @@ def predict():
 
     if file:
         filename = secure_filename(file.filename)
-        filepath = os.path.join(app.config['UPLOAD_FOLDER'], filename)
+        filepath = os.path.join('/tmp', filename)
         file.save(filepath)
 
         # Preprocess the image for the model
         img = image.load_img(filepath, target_size=(299, 299))  # Adjust target size based on your model
         img_array = image.img_to_array(img)
         img_array = np.expand_dims(img_array, axis=0)
-        
+
         # Load your pre-trained model
         model = load_model('banana_leaf.h5')
 

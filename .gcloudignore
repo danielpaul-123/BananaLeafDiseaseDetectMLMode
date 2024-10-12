@@ -15,6 +15,7 @@
 test-00000-of-00001.parquet
 train-00000-of-00001.parquet
 test_images/
+uploads/
 # Python pycache:
 __pycache__/
 # Ignored by the build system
