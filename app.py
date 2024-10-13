@@ -45,5 +45,7 @@ def predict():
         
         return f'Predicted class: {predicted_class_label}'
 
+        clear_model()
+
 if __name__ == "__main__":
     app.run(debug=True)
