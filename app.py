@@ -14,10 +14,6 @@ class_labels = ['Healthy', 'Banana Black Sigatoka Disease', 'Banana Bract Mosaic
 def index():
     return render_template('index.html')
 
-@app.route('/healthy')
-def healthy():
-    return render_template('0.html')
-
 @app.route('/predict', methods=['POST'])
 def predict():
     if 'file' not in request.files:
@@ -45,8 +41,26 @@ def predict():
         prediction = model.predict(img_array)
         predicted_class_index = np.argmax(prediction, axis=1)[0]
         predicted_class_label = class_labels[predicted_class_index]
-        
-        return f'Predicted class: {predicted_class_label}'
+        print(prediction)
+        print(predicted_class_index)
+        print(predicted_class_label)
+        print("")        
+        if (predicted_class_index==0):
+            return render_template("0.html")
+        elif (predicted_class_index==1):
+            return render_template("1.html")
+        elif (predicted_class_index==2):
+            return render_template("2.html")
+        elif (predicted_class_index==3):
+            return render_template("3.html")
+        elif (predicted_class_index==4):
+            return render_template("4.html")
+        elif (predicted_class_index==5):
+            return render_template("5.html")
+        elif (predicted_class_index==6):
+            return render_template("6.html")
+        else:
+            return 'error'
 
         clear_model()
 
