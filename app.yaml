@@ -1,6 +1,7 @@
 runtime: python39  # Specifies the Python runtime version
 entrypoint: gunicorn -b :$PORT app:app  # Gunicorn as the WSGI server
 
+instance_class: F4  # Use a larger instance type for better performance
 # instance_class and automatic scaling options (optional)
 automatic_scaling:
   max_instances: 10  # Set this to a number below 32, based on your needs
@@ -18,7 +19,3 @@ handlers:
   - url: /favicon.ico
     static_files: static/images/logo.png
     upload: static/images/logo.png
-
-  # Serve all other URLs with your Flask app
-  - url: /.*
-    script: auto

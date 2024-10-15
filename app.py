@@ -14,6 +14,9 @@ class_labels = ['Healthy', 'Banana Black Sigatoka Disease', 'Banana Bract Mosaic
 def index():
     return render_template('index.html')
 
+@app.route('/healthy')
+def healthy():
+    return render_template('0.html')
 
 @app.route('/predict', methods=['POST'])
 def predict():
