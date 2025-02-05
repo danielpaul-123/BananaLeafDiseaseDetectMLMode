@@ -14,6 +14,10 @@ class_labels = ['Healthy', 'Banana Black Sigatoka Disease', 'Banana Bract Mosaic
 def index():
     return render_template('index.html')
 
+@app.route('/result')
+def result():
+    return render_template('6.html')
+
 @app.route('/predict', methods=['POST'])
 def predict():
     if 'file' not in request.files:
@@ -26,7 +30,7 @@ def predict():
 
     if file:
         filename = secure_filename(file.filename)
-        filepath = os.path.join('/tmp', filename)
+        filepath = os.path.join('tmp/', filename)
         file.save(filepath)
 
         # Preprocess the image for the model

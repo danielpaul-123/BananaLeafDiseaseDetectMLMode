@@ -6,68 +6,70 @@ from tensorflow.keras.models import Model
 from sklearn.model_selection import train_test_split
 import numpy as np
 from PIL import Image
-import io
+import os
 
-# 1. Load the Parquet file and extract images and labels
-train_data = pd.read_parquet('train-00000-of-00001.parquet')
-test_data = pd.read_parquet('test-00000-of-00001.parquet')
+# Define the paths to the training data
+train_data_dir = 'BananaLSD/AugmentedSet'
 
-# Assuming 'image' column contains image bytes and 'label' column contains labels
-train_images = []
-train_labels = train_data['label'].values
+# Function to load images and labels from a folder
+def load_data_from_folder(folder):
+    images = []
+    labels = []
+    for label_folder in os.listdir(folder):
+        label_path = os.path.join(folder, label_folder)
+        if os.path.isdir(label_path):
+            for img_file in os.listdir(label_path):
+                img_path = os.path.join(label_path, img_file)
+                img = Image.open(img_path).resize((224, 224))
+                img = np.array(img)
+                images.append(img)
+                labels.append(label_folder)  # Assuming folder name is the label
+    return np.array(images), np.array(labels)
 
-test_images = []
-test_labels = test_data['label'].values
+# Load the training data
+train_images, train_labels = load_data_from_folder(train_data_dir)
 
+# Convert labels to numerical values
+label_to_index = {label: idx for idx, label in enumerate(set(train_labels))}
+train_labels = np.array([label_to_index[label] for label in train_labels])
 
-for img_data in train_data['image']:
-    # Convert image bytes to a PIL image and resize to 299x299 (InceptionV3 input size)
-    image_bytes = img_data['bytes']  # Use the actual key for image bytes
-    img = Image.open(io.BytesIO(image_bytes)).resize((299, 299))
-    img = np.array(img)
-    train_images.append(img)
-
-for img_data in test_data['image']:
-    # Convert image bytes to a PIL image and resize to 299x299 (InceptionV3 input size)
-    image_bytes = img_data['bytes']  # Use the actual key for image bytes
-    img = Image.open(io.BytesIO(image_bytes)).resize((299, 299))
-    img = np.array(img)
-    test_images.append(img)
-
-# Convert images to a NumPy array
-train_images = np.array(train_images)
-test_images = np.array(test_images)
+# Split the training data into training and validation sets
+train_images, val_images, train_labels, val_labels = train_test_split(train_images, train_labels, test_size=0.2, random_state=42)
 
 # Preprocess images to match the input format of InceptionV3
 train_images = tf.keras.applications.inception_v3.preprocess_input(train_images)
-test_images = tf.keras.applications.inception_v3.preprocess_input(test_images)
+val_images = tf.keras.applications.inception_v3.preprocess_input(val_images)
 
 # Convert labels to categorical if needed (for classification tasks)
 train_labels = tf.keras.utils.to_categorical(train_labels)
-test_labels = tf.keras.utils.to_categorical(test_labels)
+val_labels = tf.keras.utils.to_categorical(val_labels)
 
-
-# 3. Load the InceptionV3 model pre-trained on ImageNet, exclude the top layer
-base_model = InceptionV3(weights='imagenet', include_top=False, input_shape=(299, 299, 3))
+# Load the InceptionV3 model pre-trained on ImageNet, exclude the top layer
+base_model = InceptionV3(weights='imagenet', include_top=False, input_shape=(224, 224, 3))
 
 # Freeze the base model (optional, depending on if you want to fine-tune)
 base_model.trainable = False
 
-# 4. Add custom layers on top for our classification task
+# Add custom layers on top for our classification task
 x = base_model.output
 x = GlobalAveragePooling2D()(x)  # Global pooling to reduce dimensionality
 x = Dense(1024, activation='relu')(x)  # Dense layer
-predictions = Dense(train_labels.shape[1], activation='softmax')(x)  # Output layer (number of classes)
+predictions = Dense(len(label_to_index), activation='softmax')(x)  # Output layer (number of classes)
 
-# 5. Create the model
+# Create the model
 model = Model(inputs=base_model.input, outputs=predictions)
 
-# 6. Compile the model
+# Compile the model
 model.compile(optimizer='adam', loss='categorical_crossentropy', metrics=['accuracy'])
 
-# 7. Train the model
-model.fit(train_images, train_labels, validation_data=(test_images, test_labels), epochs=10, batch_size=32)
+# Train the model
+history = model.fit(train_images, train_labels, validation_data=(val_images, val_labels), epochs=10, batch_size=32)
 
-# 8. Evaluate the model
-test_loss, test_accuracy = model.evaluate(test_images, test_labels)
-print(f"Test accuracy: {test_accuracy:.4f}")
+# Evaluate the model
+val_loss, val_accuracy = model.evaluate(val_images, val_labels)
+print(f"Validation accuracy: {val_accuracy:.4f}")
+
+# Print all training and validation metrics
+print("Training and validation metrics:")
+for key in history.history.keys():
+    print(f"{key}: {history.history[key]}")
